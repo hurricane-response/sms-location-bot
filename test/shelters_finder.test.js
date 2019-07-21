@@ -19,6 +19,17 @@ describe('SheltersFinder', () => {
     });
   });
 
+  describe('updateLocationData', () => {
+    it('updates the data with the provided object', () => {
+      const startData = { 'some': 'data' };
+      const updateData = { 'other': 'data' };
+      const s = new SheltersFinder(startData, 5);
+      expect(s.locationData).to.deep.eql(startData);
+      s.updateLocationData(updateData);
+      expect(s.locationData).to.deep.eql(updateData);
+    });
+  });
+
   describe('zipCodesWithShelters()', () => {
     it('returns an array of zip codes', () => {
       const d = new DataUpdater('some url');
