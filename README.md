@@ -4,6 +4,10 @@
 ![Sample SMS interaction](./sms-location-bot-example.png "Robots love to help!")
 `I’m a bot! You send me a location via SMS, and I reply with the nearest location I know of for the thing I know how to locate.`
 
+## Contributing
+
+We welcome your contributions! Take a look at our [Code of Conduct](Code_of_Conduct.md), then read below to get started!
+
 ## Running `sms-location-bot`
 
 `sms-location-bot` is an Express app that can be run via e.g. `node index.js`, but see configuration documentation below.
