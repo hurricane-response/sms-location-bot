@@ -3,33 +3,57 @@
   "version": "1.0.0",
   "description": "Uses the Twilio API to accept requests to locate a resource, and send responses with nearest resource locations, over SMS.",
   "main": "index.js",
+  "engines": {
+    "node": "10.x"
+  },
   "dependencies": {
+    "blocked-at": "^1.1.3",
     "body-parser": "^1.19.0",
+    "esm": "^3.2.25",
     "express": "^4.17.1",
     "feature-parser": "^2.0.0",
-    "geojson-parser": "^1.0.1",
+    "geodesy": "^2.2.0",
     "twilio": "^3.33.1",
     "zipcodes": "^8.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "eslint": "^6.0.1",
+    "eslint-plugin-import": "^2.18.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^6.1.4",
+    "nock": "^10.0.6",
+    "nyc": "^14.1.1"
+  },
+  "esm": {
+    "cjs": true
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "NODE_ENV=test ./node_modules/.bin/nyc ./node_modules/.bin/mocha -r esm --reporter spec --level info test/*.test.js",
+    "lint": "./node_modules/.bin/eslint ./{lib,test}/**/*.js",
     "start": "node index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HackMichiana/sms-location-bot.git"
+    "url": "git+https://github.com/hurricane-response/sms-location-bot.git"
   },
   "keywords": [
     "sms",
     "geolocation",
     "code-for-america",
-    "hack-michiana"
+    "hack-michiana",
+    "hurricane-response"
   ],
   "author": "Chris Johnson Bidler",
+  "contributors": [
+    {
+      "name": "Ryan B. Harvey",
+      "email": "ryan@codeforneworleans.org"
+    }
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/HackMichiana/sms-location-bot/issues"
+    "url": "https://github.com/hurricane-response/sms-location-bot/issues"
   },
-  "homepage": "https://github.com/HackMichiana/sms-location-bot#readme"
+  "homepage": "https://github.com/hurricane-response/sms-location-bot#readme"
 }

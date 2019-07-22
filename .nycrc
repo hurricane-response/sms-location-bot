@@ -1,0 +1,16 @@
+{
+  "reporter": [
+    "clover",
+    "lcov",
+    "text",
+    "text-summary"
+  ],
+  "include": [
+    "lib/**/*.js"
+  ],
+  "require": [
+    "esm"
+  ],
+  "check-coverage": false,
+  "cache": true
+}
