@@ -18,7 +18,7 @@ npm test
 Start the API:
 
 ```{bash}
-DATA_URL="some url here" MILE_RADIUS=30 PORT=3000 node -esm index.js
+DATA_URL="https://api.hurricane-response.org/api/v1/shelters/geo.json" MILE_RADIUS=30 PORT=3000 node -r esm index.js
 ```
 
 Query the running API's webhook locally via cURL:
