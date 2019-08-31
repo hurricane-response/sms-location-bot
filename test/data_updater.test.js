@@ -28,7 +28,7 @@ describe('DataUpdater', () => {
 
   describe('constructor', () => {
     it('creates a DataUpdater object', () => {
-      const d = new DataUpdater('some_url');
+      const d = new DataUpdater('some_url', {data: 'some_path'});
       expect(d instanceof DataUpdater).to.be.true;
     });
   });
@@ -47,19 +47,21 @@ describe('DataUpdater', () => {
     });
     
     it.skip('launches a child process for the update', (done) => {
-      const d = new DataUpdater(data_url);
+      const d = new DataUpdater(data_url_origin, { my_data: data_url_path });
       d.on('update', (data) => {
-        console.log(`CHILD PROCESS VERSION - test process received 'update' event with data Map of size ${data.size}`);
-        expect(data).to.be.instanceOf(Map);
+        expect(data).to.have.own.property('my_data');
+        expect(data.my_data).to.be.instanceOf(Map);
+        console.log(`CHILD PROCESS VERSION - test process received 'update' event with data Map of size ${data.my_data.size}`);
         done();
       });
       d.performUpdate(true);
     });
     it('does an update on the main loop when specified', (done) => {
-      const d = new DataUpdater(data_url);
+      const d = new DataUpdater(data_url_origin, { my_data: data_url_path });
       d.on('update', (data) => {
-        console.log(`MAIN LOOP VERSION - test process received 'update' event with data Map of size ${data.size}`);
-        expect(data).to.be.instanceOf(Map);
+        expect(data).to.have.own.property('my_data');
+        expect(data.my_data).to.be.instanceOf(Map);
+        console.log(`MAIN LOOP VERSION - test process received 'update' event with data Map of size ${data.my_data.size}`);
         done();
       });
       d.performUpdate(false);
