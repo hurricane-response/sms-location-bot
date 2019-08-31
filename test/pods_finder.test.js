@@ -1,4 +1,4 @@
-import SheltersFinder, { _dedupeArray, _deepCopyArray } from '../lib/shelters_finder';
+import PODsFinder, { _dedupeArray, _deepCopyArray } from '../lib/pods_finder';
 import DataUpdater from '../lib/data_updater';
 import zipcodes from 'zipcodes';
 import LatLon from 'geodesy/latlon-ellipsoidal-vincenty';
@@ -11,11 +11,11 @@ const dataFixture = JSON.parse(
   fs.readFileSync(`${__dirname}/fixtures/geo.json`).toString()
 );
 
-describe('SheltersFinder', () => {
+describe('PODsFinder', () => {
   describe('constructor', () => {
-    it('creates a SheltersFinder object', () => {
-      const s = new SheltersFinder(new Map(), 5);
-      expect(s).to.be.instanceOf(SheltersFinder);
+    it('creates a PODsFinder object', () => {
+      const p = new PODsFinder(new Map(), 5);
+      expect(p).to.be.instanceOf(PODsFinder);
     });
   });
 
@@ -23,19 +23,19 @@ describe('SheltersFinder', () => {
     it('updates the data with the provided object', () => {
       const startData = { 'some': 'data' };
       const updateData = { 'other': 'data' };
-      const s = new SheltersFinder(startData, 5);
-      expect(s.locationData).to.deep.eql(startData);
-      s.updateLocationData(updateData);
-      expect(s.locationData).to.deep.eql(updateData);
+      const p = new PODsFinder(startData, 5);
+      expect(p.locationData).to.deep.eql(startData);
+      p.updateLocationData(updateData);
+      expect(p.locationData).to.deep.eql(updateData);
     });
   });
 
-  describe('zipCodesWithShelters()', () => {
+  describe('zipCodesWithPODs()', () => {
     it('returns an array of zip codes', () => {
       const d = new DataUpdater('some url', { shelters: 'some_path' });
       const shelterLocationData = d.extractGeoJsonData(dataFixture.features);
-      const s = new SheltersFinder(shelterLocationData, 5);
-      const zips = s.zipCodesWithShelters();
+      const p = new PODsFinder(shelterLocationData, 5);
+      const zips = p.zipCodesWithPODs();
       const expected = ['68850','68883','93555','78570','78559','78580','71301'];
       for (let zip of expected) { expect(zips).includes(zip); }
     });
@@ -43,37 +43,37 @@ describe('SheltersFinder', () => {
   
   describe('augmentLookupZipCodes(...)', () => {
     it('returns an array of objects with a zip property containing the zip code', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const zipcodes = ['70471', '70118'];
-      const augmentedZips = s.augmentLookupZipCodes(zipcodes);
+      const augmentedZips = p.augmentLookupZipCodes(zipcodes);
       for (let idx in augmentedZips) {
         expect(augmentedZips[idx]).to.have.ownProperty('zip');
         expect(augmentedZips[idx].zip).to.eql(zipcodes[idx]);
       }
     });
     it('returns an array of objects with an info property matching interface zipcodes.ZipCode', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const ZipCodeType = zipcodes.lookup('70003').constructor;
       const zips = ['70471', '70118'];
-      const augmentedZips = s.augmentLookupZipCodes(zips);
+      const augmentedZips = p.augmentLookupZipCodes(zips);
       for (let idx in augmentedZips) {
         expect(augmentedZips[idx]).to.have.ownProperty('info');
         expect(augmentedZips[idx].info).to.be.instanceOf(ZipCodeType);
       }
     });
     it('returns an array of objects with an latlon property of type LatLon', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const zipcodes = ['70471', '70118'];
-      const augmentedZips = s.augmentLookupZipCodes(zipcodes);
+      const augmentedZips = p.augmentLookupZipCodes(zipcodes);
       for (let idx in augmentedZips) {
         expect(augmentedZips[idx]).to.have.ownProperty('latlon');
         expect(augmentedZips[idx].latlon).to.be.instanceOf(LatLon);
       }
     });
     it('returns an array of objects with an zipsInMileRadius property with an array of objects matching interface zipcodes.ZipCode', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const zips = ['70471', '70118'];
-      const augmentedZips = s.augmentLookupZipCodes(zips);
+      const augmentedZips = p.augmentLookupZipCodes(zips);
       for (let idx in augmentedZips) {
         expect(augmentedZips[idx]).to.have.ownProperty('zipsInMileRadius');
         expect(augmentedZips[idx].zipsInMileRadius).to.be.an('array');
@@ -84,27 +84,27 @@ describe('SheltersFinder', () => {
     });
   });
 
-  describe('computeFoundShelters(...)', () => {
+  describe('computeFoundPODs(...)', () => {
     it('returns known zipcodes within the mile radius of each of the lookup zipcodes', () => {
-      const s = new SheltersFinder(new Map(), 5);
-      const lookups = ['70471', '70118'].map((z, _idx, _ary, sf = s) => {
+      const p = new PODsFinder(new Map(), 5);
+      const lookups = ['70471', '70118'].map((z, _idx, _ary, pf = p) => {
         return {
-          zipsInMileRadius: zipcodes.radius(z, sf.mileRadius)
+          zipsInMileRadius: zipcodes.radius(z, pf.mileRadius)
         };
       });
       const knowns = ['70124', '70003', '70116', '70471'];
-      const found = s.computeFoundShelters(lookups, knowns);
+      const found = p.computeFoundPODs(lookups, knowns);
       const expected = ['70124', '70116', '70471'];
       for (let zip of expected) { expect(found).includes(zip); }
     });
   });
 
-  describe('augmentShelterRecord(...)', () => {
+  describe('augmentPODRecord(...)', () => {
     it('returns an object with property distances having keys lookups', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const shelter = dataFixture.features[0].properties;
-      const lookups = s.augmentLookupZipCodes(['70471', '70118']);
-      const augmented = s.augmentShelterRecord(shelter, lookups);
+      const lookups = p.augmentLookupZipCodes(['70471', '70118']);
+      const augmented = p.augmentPODRecord(shelter, lookups);
       expect(augmented).to.have.ownProperty('distances');
       expect(augmented.distances).to.be.an('object');
       for (let l of lookups) {
@@ -112,10 +112,10 @@ describe('SheltersFinder', () => {
       }
     });
     it('returns an object with property inRadius having keys lookups', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const shelter = dataFixture.features[0].properties;
-      const lookups = s.augmentLookupZipCodes(['70471', '70118']);
-      const augmented = s.augmentShelterRecord(shelter, lookups);
+      const lookups = p.augmentLookupZipCodes(['70471', '70118']);
+      const augmented = p.augmentPODRecord(shelter, lookups);
       expect(augmented).to.have.ownProperty('inRadius');
       expect(augmented.inRadius).to.be.an('object');
       for (let l of lookups) {
@@ -123,41 +123,42 @@ describe('SheltersFinder', () => {
       }
     });
     it('returns an object with array property message type string', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const shelter = dataFixture.features[0].properties;
-      const lookups = s.augmentLookupZipCodes(['70471', '70118']);
-      const augmented = s.augmentShelterRecord(shelter, lookups);
+      const lookups = p.augmentLookupZipCodes(['70471', '70118']);
+      const augmented = p.augmentPODRecord(shelter, lookups);
       expect(augmented).to.have.ownProperty('message');
       expect(augmented.message).to.be.a('string');
     });
   });
 
-  describe('collectShelters(...)', () => {
+  describe('collectPODs(...)', () => {
     it('returns an array of objects ', () => {
       const d = new DataUpdater('some_url', { shelters: 'some_path' });
       const locationData = d.extractGeoJsonData(dataFixture.features);
-      const s = new SheltersFinder(locationData, 5);
-      const lookups = s.augmentLookupZipCodes(['68850', '71301']);
-      const knowns = s.zipCodesWithShelters();
-      const foundShelters = s.computeFoundShelters(lookups, knowns);
-      const collected = s.collectShelters(foundShelters, lookups);
+      const p = new PODsFinder(locationData, 5);
+      const lookups = p.augmentLookupZipCodes(['68850', '71301']);
+      const knowns = p.zipCodesWithPODs();
+      const foundPODs = p.computeFoundPODs(lookups, knowns);
+      const collected = p.collectPODs(foundPODs, lookups);
       const expected = Array.from(
-        JSON.parse('[{"accepting":"yes","shelter":"Lexington High School","address":"1308 N Adams St, Lexington, NE 68850, USA","city":"LEXINGTON","state":"NE","county":"Dawson County","zip":"68850","phone":null,"updated_by":null,"notes":null,"volunteer_needs":null,"longitude":-99.7487,"latitude":40.7868,"supply_needs":null,"source":"FEMA GeoServer, Shelter ID: 223259, Org ID: 121390, FORT KEARNEY CHAPTER","google_place_id":null,"special_needs":null,"id":2,"archived":false,"pets":"No","pets_notes":null,"needs":[],"updated_at":"2019-07-11T13:52:43-05:00","updatedAt":"2019-07-11T13:52:43-05:00","last_updated":"2019-07-11T13:52:43-05:00","cleanPhone":"badphone","shelterIndex":1},{"accepting":"yes","shelter":"Bolton Ave. Community Center","address":"226 Bolton Ave, Alexandria, LA 71301, USA","city":"ALEXANDRIA","state":"LA","county":"Rapides Parish","zip":"71301","phone":null,"updated_by":null,"notes":null,"volunteer_needs":null,"longitude":-92.458,"latitude":31.3076,"supply_needs":null,"source":"FEMA GeoServer, Shelter ID: 328703, Org ID: 121263, Central Louisiana Chapter","google_place_id":null,"special_needs":null,"id":8,"archived":false,"pets":"No","pets_notes":null,"needs":[],"updated_at":"2019-07-11T19:42:07-05:00","updatedAt":"2019-07-11T19:42:07-05:00","last_updated":"2019-07-11T19:42:07-05:00","cleanPhone":"badphone","shelterIndex":8}]')
+        JSON.parse('[{"accepting":"yes","shelter":"Lexington High School","address":"1308 N Adams St, Lexington, NE 68850, USA","city":"LEXINGTON","state":"NE","county":"Dawson County","zip":"68850","phone":null,"updated_by":null,"notes":null,"volunteer_needs":null,"longitude":-99.7487,"latitude":40.7868,"supply_needs":null,"source":"FEMA GeoServer, POD ID: 223259, Org ID: 121390, FORT KEARNEY CHAPTER","google_place_id":null,"special_needs":null,"id":2,"archived":false,"pets":"No","pets_notes":null,"needs":[],"updated_at":"2019-07-11T13:52:43-05:00","updatedAt":"2019-07-11T13:52:43-05:00","last_updated":"2019-07-11T13:52:43-05:00","cleanPhone":"badphone","shelterIndex":1},{"accepting":"yes","shelter":"Bolton Ave. Community Center","address":"226 Bolton Ave, Alexandria, LA 71301, USA","city":"ALEXANDRIA","state":"LA","county":"Rapides Parish","zip":"71301","phone":null,"updated_by":null,"notes":null,"volunteer_needs":null,"longitude":-92.458,"latitude":31.3076,"supply_needs":null,"source":"FEMA GeoServer, POD ID: 328703, Org ID: 121263, Central Louisiana Chapter","google_place_id":null,"special_needs":null,"id":8,"archived":false,"pets":"No","pets_notes":null,"needs":[],"updated_at":"2019-07-11T19:42:07-05:00","updatedAt":"2019-07-11T19:42:07-05:00","last_updated":"2019-07-11T19:42:07-05:00","cleanPhone":"badphone","shelterIndex":8}]')
           .map(
-            (sh, _i, _a, sf = s, l = lookups) =>
-              sf.augmentShelterRecord(sh, l)
+            (pd, _i, _a, pf = p, l = lookups) =>
+              pf.augmentPODRecord(pd, l)
           )
       );
       expect(collected).to.be.an('array');
+      console.log(collected)
       for (let shelter of expected) {
         expect(collected).to.deep.include(shelter);
       }
     });
   });
 
-  describe('getInRadiusShelters(...)', () => {
+  describe('getInRadiusPODs(...)', () => {
     it('returns in-radius shelters for the lookup as an array', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const shelters = [
         { inRadius: { '70471': true, '70118': false } },
         { inRadius: { '70471': true, '70118': true } },
@@ -169,21 +170,21 @@ describe('SheltersFinder', () => {
         { inRadius: { '70471': true, '70118': true } }
       ];
       for (let sh of expected_70471) {
-        expect(s.getInRadiusShelters(shelters, '70471')).to.deep.include(sh);
+        expect(p.getInRadiusPODs(shelters, '70471')).to.deep.include(sh);
       }
       const expected_70118 = [
         { inRadius: { '70471': true, '70118': true } },
         { inRadius: { '70471': false, '70118': true } }
       ];
       for (let sh of expected_70118) {
-        expect(s.getInRadiusShelters(shelters, '70118')).to.deep.include(sh);
+        expect(p.getInRadiusPODs(shelters, '70118')).to.deep.include(sh);
       }
     });
   });
 
-  describe('sortSheltersByDistance(...)', () => {
+  describe('sortPODsByDistance(...)', () => {
     it('sorts by ascending distance from the given lookup', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const shelters = [
         { distances: { '70471': 5.6, '70118': 4.3, '70124': 2.1 } },
         { distances: { '70471': 1.2, '70118': 2.8, '70124': 2.9 } },
@@ -195,7 +196,7 @@ describe('SheltersFinder', () => {
         { distances: { '70471': 5.6, '70118': 4.3, '70124': 2.1 } }
       ];
       for (let sh of expected_70471) {
-        expect(s.sortSheltersByDistance(shelters, '70471')).to.deep.include(sh);
+        expect(p.sortPODsByDistance(shelters, '70471')).to.deep.include(sh);
       }
       const expected_70118 = [
         { distances: { '70471': 3.3, '70118': 1.0, '70124': 9.6 } },
@@ -203,7 +204,7 @@ describe('SheltersFinder', () => {
         { distances: { '70471': 5.6, '70118': 4.3, '70124': 2.1 } }
       ];
       for (let sh of expected_70118) {
-        expect(s.sortSheltersByDistance(shelters, '70118'))
+        expect(p.sortPODsByDistance(shelters, '70118'))
           .to.deep.include(sh);
       }
       const expected_70124 = [
@@ -212,18 +213,18 @@ describe('SheltersFinder', () => {
         { distances: { '70471': 3.3, '70118': 1.0, '70124': 9.6 } }
       ];
       for (let sh of expected_70124) {
-        expect(s.sortSheltersByDistance(shelters, '70124')).to.deep.include(sh);
+        expect(p.sortPODsByDistance(shelters, '70124')).to.deep.include(sh);
       }
     });
   });
 
-  describe('truncateShelterList(...)', () => {
+  describe('truncatePODList(...)', () => {
     it('truncates the array of shelters to the specified length', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const shelters = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
       let amt, x;
       for (amt of [2, 3, 7, 12]) {
-        const truncated = s.truncateShelterList(shelters, amt);
+        const truncated = p.truncatePODList(shelters, amt);
         const expected = Math.min(amt, shelters.length);
         expect(truncated).to.be.an('array');
         expect(truncated.length).to.eql(expected);
@@ -234,9 +235,9 @@ describe('SheltersFinder', () => {
     });
   });
 
-  describe('sortedShelterListsByLookupZip', () => {
+  describe('sortedPODListsByLookupZip', () => {
     it('returns filtered, sorted and truncated lists of shelters for each lookup zipcode', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const shelters = [
         {
           distances: { '70471': 5.6, '70118': 4.3, '70124': 2.1 },
@@ -292,7 +293,7 @@ describe('SheltersFinder', () => {
           }
         ]
       };
-      const lists = s.sortSheltersByDistance(shelters, lookups, 2);
+      const lists = p.sortPODsByDistance(shelters, lookups, 2);
       for (let lookup of lookups) {
         expect(lists[lookup]).to.deep.eql(expected[lookup]);
       }
@@ -301,7 +302,7 @@ describe('SheltersFinder', () => {
 
   describe('buildMessages(...)', () => {
     it('generates an array of messages', () => {
-      const s = new SheltersFinder(new Map(), 5);
+      const p = new PODsFinder(new Map(), 5);
       const sorts = {
         '70471': [
           {
@@ -335,12 +336,12 @@ describe('SheltersFinder', () => {
         ]
       };
       const expected = [
-        'Found 2 shelters near 70471:\n\nSHELTER NUMBER ONE\n123 Any Street, Mandeville, LA 70471\nUnder 1mi away\n\nSHELTER NUMBER TWO\n123 Any Street, New Orleans, LA 70118\nAbout 4mi away',
-        'Found 2 shelters near 70118:\n\nSHELTER NUMBER TWO\n123 Any Street, New Orleans, LA 70118\nAbout 1mi away\n\nSHELTER NUMBER ONE\n123 Any Street, Mandeville, LA 70471\nAbout 3mi away',
-        'Found 2 shelters near 70124:\n\nSHELTER NUMBER THREE\n456 Other Street, New Orleans, LA 70123\nAbout 3mi away\n\nSHELTER NUMBER ONE\n123 Any Street, Mandeville, LA 70471\nAbout 3mi away'
+        'Found 2 food/water distribution points near 70471:\n\nSHELTER NUMBER ONE\n123 Any Street, Mandeville, LA 70471\nUnder 1mi away\n\nSHELTER NUMBER TWO\n123 Any Street, New Orleans, LA 70118\nAbout 4mi away',
+        'Found 2 food/water distribution points near 70118:\n\nSHELTER NUMBER TWO\n123 Any Street, New Orleans, LA 70118\nAbout 1mi away\n\nSHELTER NUMBER ONE\n123 Any Street, Mandeville, LA 70471\nAbout 3mi away',
+        'Found 2 food/water distribution points near 70124:\n\nSHELTER NUMBER THREE\n456 Other Street, New Orleans, LA 70123\nAbout 3mi away\n\nSHELTER NUMBER ONE\n123 Any Street, Mandeville, LA 70471\nAbout 3mi away'
       ];
       for (let message of expected) {
-        expect(s.buildMessages(sorts)).to.deep.include(message);
+        expect(p.buildMessages(sorts)).to.deep.include(message);
       }
     });
   });
